@@ -2,52 +2,87 @@ package roman
 
 import "strings"
 
-func ConvertToRoman(arabic int) string {
+func ConvertToArabic(roman string) (total uint16) {
+	for _, symbols := range windowedRoman(roman).Symbols() {
+		total += allRomanNumerals.ValueOf(symbols...)
+	}
+	return
+}
+
+func ConvertToRoman(arabic uint16) string {
 	var result strings.Builder
 
-	for arabic > 0 {
-		switch {
-		case arabic >= 1000:
-			result.WriteString("M")
-			arabic -= 1000
-		case arabic >= 900:
-			result.WriteString("CM")
-			arabic -= 900
-		case arabic >= 500:
-			result.WriteString("D")
-			arabic -= 500
-		case arabic >= 400:
-			result.WriteString("CD")
-			arabic -= 400
-		case arabic >= 100:
-			result.WriteString("C")
-			arabic -= 100
-		case arabic >= 90:
-			result.WriteString("XC")
-			arabic -= 90
-		case arabic >= 50:
-			result.WriteString("L")
-			arabic -= 50
-		case arabic >= 40:
-			result.WriteString("XL")
-			arabic -= 40
-		case arabic >= 10:
-			result.WriteString("X")
-			arabic -= 10
-		case arabic >= 9:
-			result.WriteString("IX")
-			arabic -= 9
-		case arabic >= 5:
-			result.WriteString("V")
-			arabic -= 5
-		case arabic >= 4:
-			result.WriteString("IV")
-			arabic -= 4
-		default:
-			result.WriteString("I")
-			arabic--
+	for _, numeral := range allRomanNumerals {
+		for arabic >= numeral.Value {
+			result.WriteString(numeral.Symbol)
+			arabic -= numeral.Value
 		}
 	}
 
 	return result.String()
+}
+
+type romanNumeral struct {
+	Value  uint16
+	Symbol string
+}
+
+type romanNumerals []romanNumeral
+
+func (r romanNumerals) ValueOf(symbols ...byte) uint16 {
+	symbol := string(symbols)
+	for _, s := range r {
+		if s.Symbol == symbol {
+			return s.Value
+		}
+	}
+
+	return 0
+}
+
+func (r romanNumerals) Exists(symbols ...byte) bool {
+	symbol := string(symbols)
+	for _, s := range r {
+		if s.Symbol == symbol {
+			return true
+		}
+	}
+	return false
+}
+
+var allRomanNumerals = romanNumerals{
+	{1000, "M"},
+	{900, "CM"},
+	{500, "D"},
+	{400, "CD"},
+	{100, "C"},
+	{90, "XC"},
+	{50, "L"},
+	{40, "XL"},
+	{10, "X"},
+	{9, "IX"},
+	{5, "V"},
+	{4, "IV"},
+	{1, "I"},
+}
+
+type windowedRoman string
+
+func (w windowedRoman) Symbols() (symbols [][]byte) {
+	for i := 0; i < len(w); i++ {
+		symbol := w[i]
+		notAtEnd := i+1 < len(w)
+
+		if notAtEnd && isSubtractive(symbol) && allRomanNumerals.Exists(symbol, w[i+1]) {
+			symbols = append(symbols, []byte{symbol, w[i+1]})
+			i++
+		} else {
+			symbols = append(symbols, []byte{symbol})
+		}
+	}
+	return
+}
+
+func isSubtractive(symbol uint8) bool {
+	return symbol == 'I' || symbol == 'X' || symbol == 'C'
 }
