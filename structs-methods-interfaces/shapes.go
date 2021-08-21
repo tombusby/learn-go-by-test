@@ -1,9 +1,14 @@
 package shapes
 
-func Permiter(width float64, height float64) float64 {
-	return 2 * (width + height)
+type Rectangle struct {
+	Width  float64
+	Height float64
 }
 
-func Area(width float64, height float64) float64 {
-	return width * height
+func Permiter(rect Rectangle) float64 {
+	return 2 * (rect.Width + rect.Height)
+}
+
+func Area(rect Rectangle) float64 {
+	return rect.Width * rect.Height
 }
